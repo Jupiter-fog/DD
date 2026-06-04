@@ -1,0 +1,1847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Lost Star Festival — DM Toolkit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     CSS VARIABLES & RESET
+  ============================================================ */
+  :root {
+    --ink:        #1a1208;
+    --parchment:  #f5e6c8;
+    --parchment2: #ede0b8;
+    --parchment3: #e2d09e;
+    --gold:       #c9900a;
+    --gold-light: #f0c040;
+    --gold-pale:  #faecc8;
+    --red:        #8b1a1a;
+    --teal:       #1a5f5f;
+    --teal-light: #2a8a8a;
+    --purple:     #4a1a6e;
+    --purple-light:#7a3aae;
+    --green:      #1a4a1a;
+    --green-light:#2e7a2e;
+    --blue:       #1a2a5a;
+    --blue-light: #2a4aaa;
+    --shadow:     rgba(10,6,0,0.35);
+    --glow-gold:  rgba(201,144,10,0.25);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: #0d0a05;
+    color: var(--ink);
+    font-family: 'Crimson Text', Georgia, serif;
+    font-size: 16px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ============================================================
+     STARFIELD BACKGROUND
+  ============================================================ */
+  #starfield {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 0;
+    overflow: hidden;
+  }
+  .star {
+    position: absolute;
+    border-radius: 50%;
+    background: #fff;
+    animation: twinkle var(--d,3s) var(--delay,0s) ease-in-out infinite alternate;
+  }
+  @keyframes twinkle {
+    from { opacity: var(--lo, 0.1); transform: scale(1); }
+    to   { opacity: var(--hi, 0.8); transform: scale(1.3); }
+  }
+
+  /* ============================================================
+     LAYOUT
+  ============================================================ */
+  #app {
+    position: relative; z-index: 1;
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    grid-template-rows: auto 1fr;
+    min-height: 100vh;
+  }
+
+  /* ============================================================
+     HEADER
+  ============================================================ */
+  #header {
+    grid-column: 1 / -1;
+    background: linear-gradient(180deg, #0d0a05 0%, #1a1005 60%, #0d0a05 100%);
+    border-bottom: 2px solid var(--gold);
+    padding: 28px 40px 22px;
+    display: flex; align-items: center; gap: 24px;
+    position: relative; overflow: hidden;
+  }
+  #header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, var(--glow-gold) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-star {
+    font-size: 52px; line-height: 1;
+    filter: drop-shadow(0 0 18px var(--gold-light));
+    animation: float 4s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+  }
+  .header-text { flex: 1; }
+  .header-subtitle {
+    font-family: 'Courier Prime', monospace;
+    font-size: 11px; letter-spacing: 4px;
+    color: var(--gold); text-transform: uppercase; margin-bottom: 4px;
+  }
+  .header-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(22px, 3.5vw, 38px);
+    font-weight: 900; color: var(--gold-light);
+    text-shadow: 0 0 30px var(--glow-gold), 0 2px 4px rgba(0,0,0,0.8);
+    line-height: 1.1;
+  }
+  .header-meta {
+    font-family: 'Crimson Text', serif;
+    font-size: 14px; font-style: italic; color: #b8a070; margin-top: 5px;
+  }
+  .header-right {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+  }
+  .session-badge {
+    background: var(--red);
+    border: 1px solid #c44;
+    border-radius: 6px; padding: 4px 14px;
+    font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700;
+    color: #ffdddd; letter-spacing: 1px; white-space: nowrap;
+    cursor: pointer; transition: all .2s;
+  }
+  .session-badge:hover { background: #a02020; }
+  .ornament { color: var(--gold); font-size: 20px; letter-spacing: 6px; opacity: .5; }
+
+  /* ============================================================
+     SIDEBAR NAV
+  ============================================================ */
+  #sidebar {
+    background: linear-gradient(180deg, #120e06 0%, #0d0a03 100%);
+    border-right: 2px solid #3a2a10;
+    padding: 24px 0;
+    position: sticky; top: 0; height: 100vh;
+    overflow-y: auto; overflow-x: hidden;
+  }
+  #sidebar::-webkit-scrollbar { width: 4px; }
+  #sidebar::-webkit-scrollbar-track { background: transparent; }
+  #sidebar::-webkit-scrollbar-thumb { background: #3a2a10; border-radius: 2px; }
+
+  .nav-section-label {
+    font-family: 'Courier Prime', monospace;
+    font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+    color: #5a4a2a; padding: 16px 20px 6px; display: block;
+  }
+  .nav-btn {
+    display: flex; align-items: center; gap: 12px;
+    width: 100%; padding: 11px 20px;
+    background: transparent; border: none;
+    font-family: 'Cinzel', serif; font-size: 13px; font-weight: 600;
+    color: #8a7050; cursor: pointer;
+    transition: all .2s; text-align: left;
+    border-left: 3px solid transparent;
+    position: relative;
+  }
+  .nav-btn:hover { color: var(--gold-light); background: rgba(201,144,10,.06); }
+  .nav-btn.active {
+    color: var(--gold-light);
+    background: linear-gradient(90deg, rgba(201,144,10,.15) 0%, transparent 100%);
+    border-left-color: var(--gold);
+  }
+  .nav-btn .nav-icon { font-size: 18px; width: 24px; flex-shrink: 0; }
+  .nav-btn .nav-badge {
+    margin-left: auto; background: var(--gold);
+    color: var(--ink); border-radius: 10px; padding: 1px 7px;
+    font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700;
+  }
+
+  .nav-divider { height: 1px; background: #2a1e08; margin: 8px 20px; }
+
+  /* Dice roller in sidebar */
+  .dice-panel {
+    margin: 20px 12px 0;
+    background: rgba(201,144,10,.06);
+    border: 1px solid #3a2a10;
+    border-radius: 10px; padding: 14px;
+  }
+  .dice-panel h3 {
+    font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700;
+    color: var(--gold); margin-bottom: 10px; text-align: center;
+    letter-spacing: 1px;
+  }
+  .dice-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; margin-bottom: 10px; }
+  .dice-btn {
+    background: #1e1608; border: 1px solid #4a3510;
+    border-radius: 6px; padding: 7px 4px;
+    font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700;
+    color: #c8a050; cursor: pointer; transition: all .15s; text-align: center;
+  }
+  .dice-btn:hover { background: #2e2210; border-color: var(--gold); color: var(--gold-light); }
+  .dice-btn.selected { background: var(--gold); color: var(--ink); border-color: var(--gold-light); }
+  #dice-result {
+    text-align: center; min-height: 44px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .dice-num {
+    font-family: 'Cinzel', serif; font-size: 28px; font-weight: 900;
+    color: var(--gold-light);
+    text-shadow: 0 0 20px var(--glow-gold);
+    animation: pop .2s ease-out;
+  }
+  @keyframes pop { from { transform: scale(1.4); opacity: .5; } to { transform: scale(1); opacity: 1; } }
+  .dice-label { font-family: 'Courier Prime', monospace; font-size: 10px; color: #6a5a3a; margin-top: 2px; }
+  #roll-btn {
+    width: 100%; padding: 8px;
+    background: linear-gradient(135deg, #8b1a1a, #6a1010);
+    border: 1px solid #c44; border-radius: 7px;
+    font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700;
+    color: #ffdddd; cursor: pointer; transition: all .2s; letter-spacing: 1px;
+  }
+  #roll-btn:hover { background: linear-gradient(135deg, #a02020, #8b1a1a); transform: translateY(-1px); }
+  #roll-btn:active { transform: translateY(0); }
+
+  /* Stars counter */
+  .stars-panel {
+    margin: 12px 12px 0;
+    background: rgba(201,144,10,.04);
+    border: 1px solid #3a2a10;
+    border-radius: 10px; padding: 12px;
+  }
+  .stars-panel h3 {
+    font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700;
+    color: var(--gold); margin-bottom: 8px; text-align: center; letter-spacing: 1px;
+  }
+  .star-counter-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .star-counter-name {
+    font-family: 'Crimson Text', serif; font-size: 13px; color: #c8a870;
+    flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 6px;
+  }
+  .star-pips { display: flex; gap: 3px; }
+  .star-pip {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #2a1e08; border: 1px solid #4a3510;
+    cursor: pointer; transition: all .15s; font-size: 9px;
+    display: flex; align-items: center; justify-content: center; color: transparent;
+  }
+  .star-pip.filled { background: var(--gold); border-color: var(--gold-light); color: var(--gold); }
+  .star-pip:hover { border-color: var(--gold); }
+
+  /* ============================================================
+     MAIN CONTENT
+  ============================================================ */
+  #main {
+    background: var(--parchment);
+    min-height: 100vh;
+    position: relative;
+  }
+  #main::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(139,100,20,.07) 27px, rgba(139,100,20,.07) 28px),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0;
+  }
+
+  .section { display: none; position: relative; z-index: 1; padding: 36px 40px 60px; animation: fadeIn .3s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Section headers */
+  .section-header {
+    display: flex; align-items: flex-end; gap: 16px;
+    margin-bottom: 32px; padding-bottom: 16px;
+    border-bottom: 2px solid var(--gold);
+    position: relative;
+  }
+  .section-header::after {
+    content: ''; position: absolute; bottom: -4px; left: 0; right: 0;
+    height: 1px; background: var(--parchment3);
+  }
+  .section-icon { font-size: 48px; line-height: 1; }
+  .section-title {
+    font-family: 'Cinzel', serif; font-size: 28px; font-weight: 900;
+    color: var(--red); text-shadow: 1px 1px 0 rgba(0,0,0,.15);
+  }
+  .section-sub {
+    font-family: 'Crimson Text', serif; font-style: italic;
+    font-size: 15px; color: #6a5020; margin-top: 3px;
+  }
+
+  /* ============================================================
+     CARDS
+  ============================================================ */
+  .card {
+    background: linear-gradient(135deg, #fffbf0 0%, #f8e8c8 100%);
+    border: 1px solid var(--parchment3);
+    border-radius: 4px;
+    box-shadow: 0 3px 12px rgba(139,100,20,.12), inset 0 1px 0 rgba(255,255,255,.5);
+    padding: 22px 24px;
+    position: relative; overflow: hidden;
+  }
+  .card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--card-accent, var(--gold));
+  }
+  .card-title {
+    font-family: 'Cinzel', serif; font-size: 16px; font-weight: 700;
+    color: var(--red); margin-bottom: 6px;
+  }
+  .card-body { font-size: 15px; line-height: 1.7; color: #2a1e08; }
+  .card-label {
+    font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px;
+    color: var(--card-accent, var(--gold));
+  }
+
+  .grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 18px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+  @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  /* Badge pill */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 10px; border-radius: 20px;
+    font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700;
+    letter-spacing: .5px; text-transform: uppercase;
+    border: 1px solid currentColor; white-space: nowrap;
+  }
+  .badge-gold  { color: var(--gold); background: rgba(201,144,10,.1); }
+  .badge-red   { color: var(--red); background: rgba(139,26,26,.1); }
+  .badge-teal  { color: var(--teal-light); background: rgba(26,95,95,.1); }
+  .badge-purple{ color: var(--purple-light); background: rgba(74,26,110,.1); }
+  .badge-green { color: var(--green-light); background: rgba(26,74,26,.1); }
+
+  /* Info box */
+  .info-box {
+    border-radius: 4px; padding: 14px 18px; margin: 14px 0;
+    border-left: 4px solid var(--box-color, var(--gold));
+    background: rgba(201,144,10,.06);
+    font-size: 14px; line-height: 1.6; color: #3a2a10;
+  }
+  .info-box.secret {
+    --box-color: var(--teal-light);
+    background: rgba(26,95,95,.08);
+    color: #0a2a2a;
+  }
+  .info-box.warning {
+    --box-color: var(--red);
+    background: rgba(139,26,26,.07);
+    color: #2a0808;
+  }
+  .info-box.tip {
+    --box-color: var(--purple-light);
+    background: rgba(74,26,110,.07);
+    color: #1a0a2a;
+  }
+  .info-box strong { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 1px; display: block; margin-bottom: 4px; }
+
+  /* Stat block */
+  .stat-block {
+    display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0;
+  }
+  .stat-chip {
+    background: var(--red); color: #ffeedd;
+    border-radius: 4px; padding: 3px 10px;
+    font-family: 'Courier Prime', monospace; font-size: 12px; font-weight: 700;
+    white-space: nowrap;
+  }
+
+  /* Star display */
+  .star-display { display: flex; gap: 3px; align-items: center; margin: 4px 0; }
+  .star-filled { color: var(--gold-light); font-size: 15px; text-shadow: 0 0 8px var(--glow-gold); }
+  .star-empty  { color: #c8a870; font-size: 15px; opacity: .35; }
+
+  /* Ornamental divider */
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 28px 0 20px; color: var(--gold); font-size: 14px; letter-spacing: 4px;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  /* Expandable row */
+  .expand-row {
+    background: rgba(139,100,20,.06);
+    border: 1px solid var(--parchment3); border-radius: 4px;
+    margin-bottom: 10px; overflow: hidden;
+    transition: box-shadow .2s;
+  }
+  .expand-row:hover { box-shadow: 0 2px 8px var(--shadow); }
+  .expand-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px; cursor: pointer;
+    background: linear-gradient(90deg, rgba(255,255,255,.3), transparent);
+    user-select: none;
+  }
+  .expand-header:hover { background: linear-gradient(90deg, rgba(255,255,255,.5), transparent); }
+  .expand-emoji { font-size: 24px; flex-shrink: 0; }
+  .expand-name { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700; color: var(--red); flex: 1; }
+  .expand-arrow { color: var(--gold); font-size: 12px; transition: transform .25s; }
+  .expand-row.open .expand-arrow { transform: rotate(90deg); }
+  .expand-body { display: none; padding: 0 18px 18px; border-top: 1px solid var(--parchment3); padding-top: 14px; }
+  .expand-row.open .expand-body { display: block; }
+
+  /* Progress bar */
+  .progress-bar {
+    height: 8px; background: var(--parchment3); border-radius: 4px; overflow: hidden; margin: 6px 0;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 4px;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    transition: width .4s ease;
+  }
+
+  /* Session tracker */
+  .tracker-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+  @media (max-width: 700px) { .tracker-grid { grid-template-columns: repeat(2,1fr); } }
+  .tracker-cell {
+    background: linear-gradient(135deg,#fffbf0,#f5e0b0);
+    border: 1px solid var(--parchment3); border-radius: 6px; padding: 14px; text-align: center;
+    box-shadow: 0 2px 6px rgba(139,100,20,.1);
+  }
+  .tracker-val {
+    font-family: 'Cinzel', serif; font-size: 32px; font-weight: 900; color: var(--red);
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .tracker-val button {
+    background: none; border: 1px solid var(--parchment3); border-radius: 4px;
+    color: var(--gold); font-size: 16px; font-weight: 900; cursor: pointer; padding: 0 6px;
+    transition: all .15s; line-height: 1.4;
+  }
+  .tracker-val button:hover { background: var(--gold); color: var(--ink); }
+  .tracker-label {
+    font-family: 'Courier Prime', monospace; font-size: 9px; letter-spacing: 2px;
+    text-transform: uppercase; color: #7a5a20; margin-top: 4px;
+  }
+
+  /* Checklist */
+  .checklist { list-style: none; }
+  .checklist li {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 8px 0; border-bottom: 1px solid rgba(139,100,20,.1);
+    font-size: 15px; color: #3a2a10; line-height: 1.5;
+    cursor: pointer; transition: opacity .2s;
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li.done { opacity: .45; text-decoration: line-through; }
+  .check-box {
+    width: 18px; height: 18px; flex-shrink: 0;
+    border: 2px solid var(--gold); border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: var(--gold-light); margin-top: 1px;
+  }
+  .checklist li.done .check-box { background: var(--gold); }
+
+  /* Location card with map-pin feel */
+  .location-card {
+    --card-accent: var(--teal-light);
+    position: relative; margin-bottom: 18px;
+  }
+  .location-card .loc-num {
+    position: absolute; top: -10px; left: 16px;
+    background: var(--teal); color: #e0ffff;
+    font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700;
+    padding: 2px 10px; border-radius: 10px; letter-spacing: 1px;
+  }
+  .location-card .card { padding-top: 28px; }
+
+  /* Character portrait card */
+  .char-card {
+    position: relative; transition: transform .2s, box-shadow .2s;
+  }
+  .char-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(139,100,20,.2); }
+  .char-portrait {
+    width: 56px; height: 56px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 30px;
+    margin-bottom: 12px; border: 2px solid var(--card-accent, var(--gold));
+    background: var(--parchment2);
+    box-shadow: 0 0 0 3px var(--parchment), 0 0 0 4px var(--card-accent, var(--gold));
+  }
+  .char-stats-row { display: flex; gap: 6px; margin: 8px 0; flex-wrap: wrap; }
+
+  /* Reward item */
+  .reward-item {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 14px; background: linear-gradient(90deg,#fffbf0,#f8e8c8);
+    border: 1px solid var(--parchment3); border-radius: 4px; margin-bottom: 10px;
+    transition: box-shadow .2s;
+  }
+  .reward-item:hover { box-shadow: 0 3px 10px rgba(139,100,20,.15); }
+  .reward-emoji { font-size: 30px; flex-shrink: 0; }
+  .reward-info { flex: 1; }
+  .reward-name { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700; color: var(--red); }
+  .reward-effect { font-size: 14px; color: #3a2a10; margin: 4px 0; line-height: 1.5; }
+
+  /* Creature stat block */
+  .creature-block {
+    border-top: 2px solid var(--red); border-bottom: 2px solid var(--red);
+    padding: 10px 0; margin: 10px 0;
+  }
+  .creature-block .stat-row {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    text-align: center; gap: 4px;
+  }
+  .creature-block .s-val {
+    font-family: 'Cinzel', serif; font-size: 20px; font-weight: 900; color: var(--red);
+  }
+  .creature-block .s-name {
+    font-family: 'Courier Prime', monospace; font-size: 9px; color: #6a4a20;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+
+  /* Quick ref table */
+  table.ref-table {
+    width: 100%; border-collapse: collapse; font-size: 14px; margin: 14px 0;
+  }
+  table.ref-table th {
+    background: var(--red); color: #ffeedd;
+    font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700; letter-spacing: 1px;
+    padding: 8px 12px; text-align: left;
+  }
+  table.ref-table td {
+    padding: 8px 12px; border-bottom: 1px solid var(--parchment3); color: #2a1e08;
+    vertical-align: top; line-height: 1.5;
+  }
+  table.ref-table tr:nth-child(even) td { background: rgba(139,100,20,.05); }
+  table.ref-table tr:hover td { background: rgba(201,144,10,.08); }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    #app { grid-template-columns: 1fr; }
+    #sidebar { height: auto; position: static; padding: 12px 0; }
+    .section { padding: 24px 20px 40px; }
+    #header { padding: 20px 20px 16px; }
+  }
+
+  /* Print / GitHub note */
+  .github-note {
+    position: fixed; bottom: 16px; right: 16px; z-index: 100;
+    background: #1a1005; border: 1px solid var(--gold);
+    border-radius: 8px; padding: 8px 14px;
+    font-family: 'Courier Prime', monospace; font-size: 11px;
+    color: var(--gold); letter-spacing: 1px; opacity: .7;
+    pointer-events: none;
+  }
+
+  /* Scroll to top */
+  .scroll-top {
+    position: fixed; bottom: 20px; left: 280px;
+    background: var(--red); color: #ffeedd;
+    border: none; border-radius: 50%; width: 38px; height: 38px;
+    font-size: 18px; cursor: pointer; opacity: 0; pointer-events: none;
+    transition: opacity .3s; box-shadow: 0 3px 10px var(--shadow); z-index: 50;
+  }
+  .scroll-top.visible { opacity: .9; pointer-events: auto; }
+
+  /* Tooltip */
+  [data-tip] { position: relative; cursor: help; border-bottom: 1px dotted var(--gold); }
+  [data-tip]::after {
+    content: attr(data-tip);
+    position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+    background: #1a1005; color: var(--gold-light);
+    font-family: 'Courier Prime', monospace; font-size: 11px;
+    padding: 5px 10px; border-radius: 4px; white-space: nowrap;
+    pointer-events: none; opacity: 0; transition: opacity .2s;
+    border: 1px solid #3a2a10; z-index: 100;
+  }
+  [data-tip]:hover::after { opacity: 1; }
+
+  /* ---- Minigame card colour accent ---- */
+  .mg-card { --card-accent: var(--purple-light); }
+  .chal-card { --card-accent: var(--teal-light); }
+</style>
+</head>
+<body>
+
+<!-- Starfield -->
+<div id="starfield"></div>
+
+<!-- App Shell -->
+<div id="app">
+
+  <!-- ============================
+       HEADER
+  ============================= -->
+  <header id="header">
+    <div class="header-star">🌟</div>
+    <div class="header-text">
+      <div class="header-subtitle">✦ Dungeon Master Toolkit ✦ FirstFable Edition</div>
+      <div class="header-title">The Lost Star Festival</div>
+      <div class="header-meta">An adventure for ages 5–7 &nbsp;·&nbsp; Animals · Magic · Pirates · Knights · Sci-Fi</div>
+    </div>
+    <div class="header-right">
+      <button class="session-badge" onclick="alert('Session notes: Use the Session tab to track progress!')">⚔ SESSION 1</button>
+      <div class="ornament">✦ ✦ ✦</div>
+    </div>
+  </header>
+
+  <!-- ============================
+       SIDEBAR
+  ============================= -->
+  <nav id="sidebar">
+    <span class="nav-section-label">Navigation</span>
+
+    <button class="nav-btn active" data-tab="overview" onclick="switchTab('overview')">
+      <span class="nav-icon">📜</span> Overview
+    </button>
+    <button class="nav-btn" data-tab="adventure" onclick="switchTab('adventure')">
+      <span class="nav-icon">🗺️</span> The Adventure
+    </button>
+    <button class="nav-btn" data-tab="characters" onclick="switchTab('characters')">
+      <span class="nav-icon">⚔️</span> Characters
+      <span class="nav-badge">4</span>
+    </button>
+    <button class="nav-btn" data-tab="creatures" onclick="switchTab('creatures')">
+      <span class="nav-icon">🐉</span> Creatures & NPCs
+      <span class="nav-badge">5</span>
+    </button>
+    <button class="nav-btn" data-tab="challenges" onclick="switchTab('challenges')">
+      <span class="nav-icon">🧩</span> Challenges
+      <span class="nav-badge">6</span>
+    </button>
+    <button class="nav-btn" data-tab="minigames" onclick="switchTab('minigames')">
+      <span class="nav-icon">🎲</span> Mini-Games
+      <span class="nav-badge">5</span>
+    </button>
+    <button class="nav-btn" data-tab="rewards" onclick="switchTab('rewards')">
+      <span class="nav-icon">✨</span> Rewards & Loot
+    </button>
+    <button class="nav-btn" data-tab="rules" onclick="switchTab('rules')">
+      <span class="nav-icon">📖</span> Quick Rules Ref
+    </button>
+    <button class="nav-btn" data-tab="session" onclick="switchTab('session')">
+      <span class="nav-icon">📋</span> Session Tracker
+    </button>
+
+    <div class="nav-divider"></div>
+    <span class="nav-section-label">Tools</span>
+
+    <!-- Dice Roller -->
+    <div class="dice-panel">
+      <h3>⚄ DICE ROLLER</h3>
+      <div class="dice-grid">
+        <button class="dice-btn selected" data-sides="6" onclick="selectDice(6,this)">d6</button>
+        <button class="dice-btn" data-sides="4"  onclick="selectDice(4,this)">d4</button>
+        <button class="dice-btn" data-sides="8"  onclick="selectDice(8,this)">d8</button>
+        <button class="dice-btn" data-sides="10" onclick="selectDice(10,this)">d10</button>
+        <button class="dice-btn" data-sides="12" onclick="selectDice(12,this)">d12</button>
+        <button class="dice-btn" data-sides="20" onclick="selectDice(20,this)">d20</button>
+      </div>
+      <div id="dice-result">
+        <div class="dice-num" id="dice-num">—</div>
+        <div class="dice-label" id="dice-label">choose a die & roll</div>
+      </div>
+      <button id="roll-btn" onclick="rollDice()">ROLL THE DICE</button>
+    </div>
+
+    <!-- Special Thing Stars Tracker -->
+    <div class="stars-panel">
+      <h3>★ STARS TRACKER</h3>
+      <div id="stars-tracker"></div>
+    </div>
+  </nav>
+
+  <!-- ============================
+       MAIN CONTENT
+  ============================= -->
+  <main id="main">
+
+    <!-- ===== OVERVIEW ===== -->
+    <section id="tab-overview" class="section active">
+      <div class="section-header">
+        <div class="section-icon">📜</div>
+        <div>
+          <div class="section-title">DM Overview</div>
+          <div class="section-sub">Everything you need before the session begins</div>
+        </div>
+      </div>
+
+      <div class="info-box secret">
+        <strong>🤫 THE BIG SECRET — Don't read aloud!</strong>
+        The Festival Star wasn't stolen. It rolled away when a baby dragon named <strong>Pip</strong> sneezed on it by accident. Pip is hiding in the Whispering Woods, curled around the Star, trying to warm it back up. The Star isn't glowing because it's <em>scared</em>. The kids must be kind to Pip — not fight — and the Star will glow again.
+      </div>
+
+      <div class="grid-2" style="margin-bottom:24px;">
+        <div class="card">
+          <div class="card-label">Adventure Premise</div>
+          <div class="card-title">The Lost Star Festival</div>
+          <div class="card-body">Every 100 years, the Glimmering Kingdom holds the Star Festival. The Festival Star — a giant warm glowing gem — has vanished. Professor Hoot, the ancient owl Star Keeper, begs the heroes to find it before sunset. Along the way they'll cross a glowing marsh, solve a riddle in a cave, and follow tracks through a whispering forest.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Session Vitals</div>
+          <div class="card-body" style="line-height:2;">
+            <div>🕐 <strong>Duration:</strong> ~90 minutes</div>
+            <div>👧👦 <strong>Players:</strong> 2 children (ages 5 &amp; 7)</div>
+            <div>👨 <strong>GU Role:</strong> All NPCs, creatures &amp; narration</div>
+            <div>🎲 <strong>Dice:</strong> d6 only (count 4,5,6 as ⭐)</div>
+            <div>💡 <strong>Core Lesson:</strong> Kindness is more powerful than strength</div>
+            <div>🌍 <strong>Setting:</strong> The Glimmering Kingdom</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider">⚜ BEFORE YOU BEGIN ⚜</div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-label">Materials Checklist</div>
+          <ul class="checklist" id="prep-checklist">
+            <li onclick="toggleCheck(this)"><div class="check-box"></div> Several six-sided dice (d6s)</li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div> Pencils for character sheets</li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div> Character sheets printed or drawn</li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div> Index cards for Guffin sketching</li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div> Straws (for Pip's Sneeze minigame)</li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div> Paper cups or pom-poms</li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div> Small coloured objects (treasure sort)</li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div> Music source (for freeze game)</li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div> 5 pillows in a row (wobbly bridge)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-label">10 GU Commandments (Quick List)</div>
+          <ul class="checklist">
+            <li><div class="check-box">✓</div> Keep it moving — skip dull stretches</li>
+            <li><div class="check-box">✓</div> Let the characters talk — don't interrupt</li>
+            <li><div class="check-box">✓</div> Cross-cut when party splits up</li>
+            <li><div class="check-box">✓</div> Choose your words carefully</li>
+            <li><div class="check-box">✓</div> Read your players — watch for fidgets</li>
+            <li><div class="check-box">✓</div> Help kids understand player vs character knowledge</li>
+            <li><div class="check-box">✓</div> Avoid violence — use kindness as solution</li>
+            <li><div class="check-box">✓</div> Avoid stereotypes in NPC voices</li>
+            <li><div class="check-box">✓</div> Just say YES to good player ideas</li>
+            <li><div class="check-box">✓</div> Teach something interesting in every scene</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="divider">⚜ SESSION FLOW ⚜</div>
+
+      <div class="card">
+        <div class="card-label">Suggested Session Flow</div>
+        <table class="ref-table">
+          <thead><tr><th>Time</th><th>Scene</th><th>Key Activity</th></tr></thead>
+          <tbody>
+            <tr><td>0–10 min</td><td>Character Creation / Intro</td><td>Kids choose characters, name them, describe one thing their hero looks like</td></tr>
+            <tr><td>10–20 min</td><td>Professor Hoot's Observatory</td><td>Paper-sorting challenge · Earn Starlight Lantern</td></tr>
+            <tr><td>20–35 min</td><td>The Bubble Marsh</td><td>Even-number lily pad puzzle · Mini-game: Pip's Sneeze Training</td></tr>
+            <tr><td>35–50 min</td><td>Candy Crag Caves</td><td>Rhyme Bat riddle · Mini-game: Freeze! Knight Training</td></tr>
+            <tr><td>50–65 min</td><td>Whispering Woods</td><td>Quiet Challenge (10 sec silence) · Find Pip</td></tr>
+            <tr><td>65–80 min</td><td>Rescue the Star</td><td>Roleplay kindness to Pip · Collaborative tree-lift</td></tr>
+            <tr><td>80–90 min</td><td>The Zoo / Finale</td><td>Meet the King · Reward ceremony · Celebrate!</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== ADVENTURE ===== -->
+    <section id="tab-adventure" class="section">
+      <div class="section-header">
+        <div class="section-icon">🗺️</div>
+        <div>
+          <div class="section-title">The Adventure</div>
+          <div class="section-sub">The Hunt for the Lost Star — 4 locations, any order</div>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <strong>🧭 Opening Read-Aloud</strong>
+        "The Glimmering Kingdom is buzzing with excitement — the Star Festival starts at sunset! But disaster has struck. Professor Hoot, the very old and very wise owl who keeps the Festival Star safe, has discovered it is <em>gone</em>. Without it, no wishes can be made. The Professor has asked YOU, brave heroes, to find it before the sun goes down. Are you ready?"
+      </div>
+
+      <div class="divider">⚜ LOCATION 1 ⚜</div>
+      <div class="location-card">
+        <div class="loc-num">STOP 1</div>
+        <div class="card" style="--card-accent:#8b6914;">
+          <div class="card-title">🦉 Professor Hoot's Observatory</div>
+          <div class="card-body">
+            <p>A tall crooked tower crammed with star charts, half-eaten biscuits, and towers of paper. The Professor is very old and very forgetful — his glasses are always on his head.</p>
+          </div>
+          <div class="info-box" style="margin-top:12px;">
+            <strong>🎭 How to Play Professor Hoot</strong>
+            Speak in a slow, grand, wavery voice. Keep interrupting yourself to look for things ("now where did I put… ah! Never mind."). Kids love helping him find things — let them "discover" his missing map or glasses.
+          </div>
+          <div class="info-box secret">
+            <strong>🧩 Challenge — Paper Sort (Smart Roll)</strong>
+            Shuffle 5–7 index cards face-down. One is marked "MAP ★" on the back. Kids flip them one at a time to find it. For the 5-year-old: mark the map card with a star so it's clearly different. For the 7-year-old: describe each card ("this one has a picture of a cat…") and have them remember what they've seen before finding the map card. This counts as a Smart Challenge — no dice needed if they succeed at the real activity.
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+            <span class="badge badge-teal">Smart Challenge</span>
+            <span class="badge badge-gold">Reward: Starlight Lantern (3★)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider">⚜ LOCATION 2 ⚜</div>
+      <div class="location-card">
+        <div class="loc-num">STOP 2</div>
+        <div class="card" style="--card-accent:#1a5f5f;">
+          <div class="card-title">🐸 The Bubble Marsh</div>
+          <div class="card-body">
+            <p>A bouncy, glowing swamp where giant lily pads float on bubbles. It's beautiful but easy to sink into. Cheerful frogs are everywhere, easily distracted by shiny things.</p>
+          </div>
+          <div class="info-box" style="margin-top:12px;">
+            <strong>🧩 Challenge — Even-Number Lily Pads (Smart/Fast)</strong>
+            Draw or write numbers 1–10 on paper "lily pads." Lay them on the floor. Kids must hop only on the even ones (2,4,6,8,10) to cross. For the 5-year-old: use just 1–6. For the 7-year-old: use 1–12 and add a rule: "skip number 8, the frog is sitting on it!"
+          </div>
+          <div class="info-box tip">
+            <strong>💡 GU Tip — The Bubble Frogs</strong>
+            Frogs are friendly but keep bumping into the heroes. They'll clear a path if given something shiny (a coin, a button, even a crinkled piece of foil from your pocket). Kids love improvising this kind of bribe!
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+            <span class="badge badge-teal">Smart + Fast Challenge</span>
+            <span class="badge badge-gold">Reward: Marsh Boots (2★)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider">⚜ LOCATION 3 ⚜</div>
+      <div class="location-card">
+        <div class="loc-num">STOP 3</div>
+        <div class="card" style="--card-accent:#4a1a6e;">
+          <div class="card-title">🦇 The Candy Crag Caves</div>
+          <div class="card-body">
+            <p>A cave made entirely of crystal that catches the light and looks like candy. Rhyme Bats live here — friendly bats who ONLY speak in rhymes and squeak with delight when someone rhymes back.</p>
+          </div>
+          <div class="info-box" style="margin-top:12px;">
+            <strong>🧩 Challenge — The Rhyme Bat Riddle</strong>
+            You (the GU) speak in rhymes the whole scene — even badly, the kids will laugh. The lead Rhyme Bat says:<br><br>
+            <em>"We will let you through, it's true, it's true — but first you must do what rhymers do! I'll start a rhyme, you finish mine: The dragon flew over the tall blue hill, and landed right next to a big old…"</em><br><br>
+            Any rhyme with "hill" works. Accept everything. Then do 2 more. The 5-year-old can have simpler ones ("the cat sat on the…").
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+            <span class="badge badge-purple">Smart Challenge</span>
+            <span class="badge badge-gold">Reward: Bat Echo Stone (2★)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider">⚜ LOCATION 4 ⚜</div>
+      <div class="location-card">
+        <div class="loc-num">STOP 4</div>
+        <div class="card" style="--card-accent:#2e7a2e;">
+          <div class="card-title">🌳 The Whispering Woods</div>
+          <div class="card-body">
+            <p>A forest where the trees have gentle, whispery faces and share secrets with those who are quiet enough to listen. Pip the Baby Dragon is hiding here, very embarrassed.</p>
+          </div>
+          <div class="info-box" style="margin-top:12px;">
+            <strong>🧩 Challenge — The Silence Test</strong>
+            "The whispering trees will only tell you where Pip is hiding if you can be completely silent for <strong>10 whole seconds</strong>." Start a timer. Count silently on your fingers. This is a genuinely fun real-world test and 5-year-olds find it very hard — let them try 2–3 times. Celebrate loudly when they succeed!
+          </div>
+          <div class="info-box secret">
+            <strong>🤫 Finding Pip</strong>
+            Pip is curled around the Star trying to warm it up. He looks up with huge, teary eyes. He immediately says "I'm sorry! I'm sorry! I didn't mean to sneeze it away!" He's clearly not a villain — just a frightened baby dragon. The Star will glow again only if the kids choose to comfort Pip, not threaten or capture him.
+          </div>
+          <div class="info-box warning">
+            <strong>⚠️ If Kids Try to Fight Pip</strong>
+            Pip doesn't fight back — he just cries and curls up smaller. Gently narrate: "Pip looks so sad and scared. He whispers: 'Please don't hurt me…' The Star flickers even dimmer." This nudges them toward kindness without forcing it.
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+            <span class="badge badge-green">No dice — pure roleplay</span>
+            <span class="badge badge-gold">Reward: Pip joins the party! (3★)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider">⚜ FINALE ⚜</div>
+      <div class="card" style="--card-accent:#8b1a1a; background: linear-gradient(135deg,#fff8ee,#fce8c0);">
+        <div class="card-label" style="color:var(--red);">The Finale — The Star Festival</div>
+        <div class="card-title" style="font-size:20px;">🌟 Return to the Kingdom</div>
+        <div class="card-body">
+          <p style="margin-bottom:12px;">The heroes return with Pip and the glowing Star. Professor Hoot cries happy tears ("I knew you'd do it! Now where did I put my invitation to the party…"). The Festival begins!</p>
+        </div>
+        <div class="grid-2" style="margin-top:12px;">
+          <div class="info-box" style="margin:0;">
+            <strong>✅ GOOD ENDING — Pip was welcomed</strong>
+            The King is delighted. Pip gets to light the fireworks with a (controlled) sneeze. Everyone receives a "Friend of the Kingdom" medal. Pip stays as a companion.
+          </div>
+          <div class="info-box warning" style="margin:0;">
+            <strong>🔶 PARTIAL ENDING — Pip was captured</strong>
+            The King looks sad. "A frightened creature is no gift." He orders Pip released. Heroes still get a reward but the GU can gently discuss why Pip might have felt sad.
+          </div>
+        </div>
+        <div class="info-box tip" style="margin-top:12px;">
+          <strong>💡 The Lesson to Land</strong>
+          Whether the ending is perfect or not, find a moment to say in character: "The Kingdom's greatest hero tonight wasn't the strongest or the fastest — it was the one who chose to be kind."
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CHARACTERS ===== -->
+    <section id="tab-characters" class="section">
+      <div class="section-header">
+        <div class="section-icon">⚔️</div>
+        <div>
+          <div class="section-title">Player Characters</div>
+          <div class="section-sub">Four pre-built FirstFable heroes — kids each choose one</div>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <strong>📌 How Stats Work</strong>
+        Each character has three stats: <span data-tip="Roll this many dice for physical power actions">Strong</span>, <span data-tip="Roll this many dice for speed and agility actions">Fast</span>, and <span data-tip="Roll this many dice for clever, puzzle and magic actions">Smart</span>. They total 9 points. Add Shine points to the stat they belong to. Roll that many d6s — every 4, 5, or 6 is a ⭐ (Star). More Stars = better result.
+      </div>
+
+      <div class="grid-2">
+
+        <!-- Ruby -->
+        <div class="card char-card" style="--card-accent:#2e7a2e;">
+          <div class="char-portrait" style="--card-accent:#2e7a2e;">🐱</div>
+          <div class="card-title">Ruby — Animal Keeper</div>
+          <div style="font-size:13px;font-style:italic;color:#4a3a10;margin-bottom:10px;line-height:1.5;">Loves animals, especially grumpy ones. Can tell when something is hurt before anyone else can. Great choice for the 5-year-old who loves creatures.</div>
+          <div class="creature-block">
+            <div class="stat-row">
+              <div><div class="s-val">3</div><div class="s-name">Strong</div></div>
+              <div><div class="s-val">2</div><div class="s-name">Fast</div></div>
+              <div><div class="s-val">4</div><div class="s-name">Smart</div></div>
+            </div>
+          </div>
+          <div class="card-label" style="color:#2e7a2e;margin-top:8px;">⭐ Shines</div>
+          <div style="font-size:14px;line-height:1.8;color:#2a1e08;">• Scampering (Fast +1)<br>• Taking Care of Hurt Animals (Smart +1)<br>• Throw Things (Strong +1)</div>
+          <div class="info-box warning" style="margin:10px 0 8px;font-size:13px;">
+            <strong>⚠️ Weakness</strong> Camping — always gets splinters trying to build a fire.
+          </div>
+          <div class="info-box" style="margin:0;font-size:13px;">
+            <strong>✨ Special: Blaze the Forest Cat (5★)</strong> Blaze can roar loudly to scare away threats, or help track things by scent. Stars refill between adventures.
+          </div>
+        </div>
+
+        <!-- Roland -->
+        <div class="card char-card" style="--card-accent:#8b1a1a;">
+          <div class="char-portrait" style="--card-accent:#8b1a1a;">🗡️</div>
+          <div class="card-title">Roland — Knight</div>
+          <div style="font-size:13px;font-style:italic;color:#4a3a10;margin-bottom:10px;line-height:1.5;">Brave and a little stubborn. Charges in first, asks questions later. Always tries to do the right thing. Great for kids who want to be a hero.</div>
+          <div class="creature-block">
+            <div class="stat-row">
+              <div><div class="s-val">4</div><div class="s-name">Strong</div></div>
+              <div><div class="s-val">3</div><div class="s-name">Fast</div></div>
+              <div><div class="s-val">2</div><div class="s-name">Smart</div></div>
+            </div>
+          </div>
+          <div class="card-label" style="color:#8b1a1a;margin-top:8px;">⭐ Shines</div>
+          <div style="font-size:14px;line-height:1.8;color:#2a1e08;">• Mighty Arms (Strong +1)<br>• Sword-Fighting (Strong/Fast +1)<br>• Painting (Smart +1 — surprise skill!)</div>
+          <div class="info-box warning" style="margin:10px 0 8px;font-size:13px;">
+            <strong>⚠️ Weakness</strong> Riding a Horse — always slides right off.
+          </div>
+          <div class="info-box" style="margin:0;font-size:13px;">
+            <strong>✨ Special: Magic Sword (5★)</strong> Glows and points toward whatever Roland is looking for. Can also cut through almost anything.
+          </div>
+        </div>
+
+        <!-- Sela -->
+        <div class="card char-card" style="--card-accent:#4a1a6e;">
+          <div class="char-portrait" style="--card-accent:#4a1a6e;">🧚</div>
+          <div class="card-title">Sela — Faerie Princess</div>
+          <div style="font-size:13px;font-style:italic;color:#4a3a10;margin-bottom:10px;line-height:1.5;">Tiny, fast, and knows a secret about every magical creature in the forest. Loves riddles and sparkly things. Perfect for the 5-year-old who loves magic.</div>
+          <div class="creature-block">
+            <div class="stat-row">
+              <div><div class="s-val">2</div><div class="s-name">Strong</div></div>
+              <div><div class="s-val">4</div><div class="s-name">Fast</div></div>
+              <div><div class="s-val">3</div><div class="s-name">Smart</div></div>
+            </div>
+          </div>
+          <div class="card-label" style="color:#4a1a6e;margin-top:8px;">⭐ Shines</div>
+          <div style="font-size:14px;line-height:1.8;color:#2a1e08;">• Singing (Smart +1)<br>• Squeezing Through Small Openings (Fast +1)<br>• Knows Everyone in the Faerie Courts (Smart +1)</div>
+          <div class="info-box warning" style="margin:10px 0 8px;font-size:13px;">
+            <strong>⚠️ Weakness</strong> Talking with birds — they never understand her.
+          </div>
+          <div class="info-box" style="margin:0;font-size:13px;">
+            <strong>✨ Special: Faerie Magic (5★)</strong> Can move objects without touching them, make things lighter, or create small sparkling distractions.
+          </div>
+        </div>
+
+        <!-- Blake -->
+        <div class="card char-card" style="--card-accent:#1a2a5a;">
+          <div class="char-portrait" style="--card-accent:#1a2a5a;">🏴‍☠️</div>
+          <div class="card-title">Blake — Pirate</div>
+          <div style="font-size:13px;font-style:italic;color:#4a3a10;margin-bottom:10px;line-height:1.5;">Always grinning like he knows something you don't. He's been on a lot of adventures and has a trick for everything. Great all-rounder for the 7-year-old.</div>
+          <div class="creature-block">
+            <div class="stat-row">
+              <div><div class="s-val">3</div><div class="s-name">Strong</div></div>
+              <div><div class="s-val">3</div><div class="s-name">Fast</div></div>
+              <div><div class="s-val">3</div><div class="s-name">Smart</div></div>
+            </div>
+          </div>
+          <div class="card-label" style="color:#1a2a5a;margin-top:8px;">⭐ Shines</div>
+          <div style="font-size:14px;line-height:1.8;color:#2a1e08;">• Sneaky (Fast +1)<br>• Fighting With a Dagger (Fast +1)<br>• Acrobat (Fast/Strong +1)</div>
+          <div class="info-box warning" style="margin:10px 0 8px;font-size:13px;">
+            <strong>⚠️ Weakness</strong> Cooking — everything tastes like boot leather.
+          </div>
+          <div class="info-box" style="margin:0;font-size:13px;">
+            <strong>✨ Special: Eye of the Sea Pearl (5★)</strong> A magical pearl that lets Blake see things from far away — or even glimpse what might happen next.
+          </div>
+        </div>
+
+      </div>
+
+      <div class="divider">⚜ TEACHING MOMENT RULE ⚜</div>
+      <div class="card">
+        <div class="card-label">⭐ The Teaching Moment — Growing a Shine</div>
+        <div class="card-body">If a player rolls a Star on <strong>every single die</strong> in their pool, that's a Teaching Moment! The character has mastered something new. The player can add +1 to an existing Shine, or write a brand new Shine at 1 point. This is a powerful, exciting moment — celebrate it! Say: <em>"Something clicks — you've never felt so natural doing that. Write down [Shine name] — you just got better at it forever."</em></div>
+      </div>
+    </section>
+
+    <!-- ===== CREATURES ===== -->
+    <section id="tab-creatures" class="section">
+      <div class="section-header">
+        <div class="section-icon">🐉</div>
+        <div>
+          <div class="section-title">Creatures & NPCs</div>
+          <div class="section-sub">All friendly, funny, or frightened — no scary villains</div>
+        </div>
+      </div>
+
+      <!-- Pip -->
+      <div class="expand-row open" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <div class="expand-emoji">🐲</div>
+          <div>
+            <div class="expand-name">Pip the Baby Dragon</div>
+            <div style="font-size:12px;color:#7a5a30;font-family:'Courier Prime',monospace;margin-top:2px;">MAIN NPC · Friendly · Very Sneezy</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-left:auto;align-items:center;">
+            <span class="badge badge-green">Key Character</span>
+            <div class="expand-arrow">▶</div>
+          </div>
+        </div>
+        <div class="expand-body">
+          <div class="creature-block">
+            <div class="stat-row">
+              <div><div class="s-val">2</div><div class="s-name">Strong</div></div>
+              <div><div class="s-val">3</div><div class="s-name">Fast</div></div>
+              <div><div class="s-val">2</div><div class="s-name">Smart</div></div>
+            </div>
+          </div>
+          <p style="font-size:14px;font-style:italic;color:#4a3a10;margin:10px 0;line-height:1.6;">Shy, apologetic, and adorably clumsy. Pip sneezes sparks when nervous and has huge teary eyes. He genuinely didn't mean to sneeze the Star away and feels absolutely terrible about it.</p>
+          <div class="info-box" style="margin-bottom:10px;">
+            <strong>✨ Fire Sneeze (3★)</strong>
+            Can accidentally (or on purpose) send a small jet of flame in a direction. If the party helps Pip practice aiming, it becomes more useful. Can be used to light torches, burn ropes, or as a distraction.
+          </div>
+          <div class="info-box tip">
+            <strong>🎭 How to Play Pip</strong>
+            Speak in a high, trembling voice that keeps cracking. Pip interrupts himself with little sneezes ("*achoo* — sorry!"). He knocks things over by accident. He hides behind the biggest character. He gradually gets braver and more confident the kinder the kids are. If the 5-year-old especially takes care of Pip, have Pip specifically thank them — kids remember this forever.
+          </div>
+        </div>
+      </div>
+
+      <!-- Professor Hoot -->
+      <div class="expand-row" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <div class="expand-emoji">🦉</div>
+          <div>
+            <div class="expand-name">Professor Hoot</div>
+            <div style="font-size:12px;color:#7a5a30;font-family:'Courier Prime',monospace;margin-top:2px;">QUEST GIVER · Ancient · Forgetful</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-left:auto;align-items:center;">
+            <span class="badge badge-gold">Opens Adventure</span>
+            <div class="expand-arrow">▶</div>
+          </div>
+        </div>
+        <div class="expand-body">
+          <div class="creature-block">
+            <div class="stat-row">
+              <div><div class="s-val">1</div><div class="s-name">Strong</div></div>
+              <div><div class="s-val">1</div><div class="s-name">Fast</div></div>
+              <div><div class="s-val">6</div><div class="s-name">Smart</div></div>
+            </div>
+          </div>
+          <p style="font-size:14px;font-style:italic;color:#4a3a10;margin:10px 0;line-height:1.6;">Very wise, very old, very forgetful. Always looking for things that are right in front of him. His glasses are on his head. His tea is in his hand. He knows almost everything about stars and nothing about where he put his keys.</p>
+          <div class="info-box tip">
+            <strong>🎭 How to Play Professor Hoot</strong>
+            Speak slowly and grandly, then pause to look for something mid-sentence. "The Star is of utmost importance, you see, it contains the wish-energy of— now where did I put my spectacles…" Let kids "find" things for him. Give them important story info while he's distracted.
+          </div>
+        </div>
+      </div>
+
+      <!-- Renyard -->
+      <div class="expand-row" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <div class="expand-emoji">🦊</div>
+          <div>
+            <div class="expand-name">Renyard the Fox-Boy</div>
+            <div style="font-size:12px;color:#7a5a30;font-family:'Courier Prime',monospace;margin-top:2px;">TRICKSTER NPC · Sneaky · Actually a Fox</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-left:auto;align-items:center;">
+            <span class="badge badge-red">Optional Encounter</span>
+            <div class="expand-arrow">▶</div>
+          </div>
+        </div>
+        <div class="expand-body">
+          <div class="creature-block">
+            <div class="stat-row">
+              <div><div class="s-val">3</div><div class="s-name">Strong</div></div>
+              <div><div class="s-val">5</div><div class="s-name">Fast</div></div>
+              <div><div class="s-val">3</div><div class="s-name">Smart</div></div>
+            </div>
+          </div>
+          <div class="stat-block"><span class="stat-chip">Picking Pockets +1</span><span class="stat-chip">Riddles +1</span><span class="stat-chip">Using Rope +1</span></div>
+          <div class="info-box warning" style="margin:8px 0;">
+            <strong>⚠️ Weakness: Math (−1)</strong> Can't do basic arithmetic — even very simple sums confuse him.
+          </div>
+          <p style="font-size:14px;color:#4a3a10;line-height:1.6;margin:8px 0;">Renyard was turned into a person for violating the Law of Foxes. He plans to pickpocket the heroes and use his magic Jumping Boots to escape into the treetops. He doesn't want to fight (Damage: 1). The real challenge is catching him.</p>
+          <div class="info-box secret">
+            <strong>🤫 The Secret</strong>
+            When caught and boots removed, the spell breaks — he turns back into a fox! He says they can keep the boots and, if asked, tells them which way Pip went.
+          </div>
+          <div class="info-box tip">
+            <strong>🎭 How to Play Renyard</strong>
+            Talk fast. Change the subject. Tell one small half-truth. Grin a lot. He's not mean — just mischievous. Kids can befriend him easily if they outsmart him rather than fight him.
+          </div>
+        </div>
+      </div>
+
+      <!-- Bubble Frogs -->
+      <div class="expand-row" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <div class="expand-emoji">🐸</div>
+          <div>
+            <div class="expand-name">The Bubble Frogs</div>
+            <div style="font-size:12px;color:#7a5a30;font-family:'Courier Prime',monospace;margin-top:2px;">HELPFUL OBSTACLE · Cheerful · Distracted</div>
+          </div>
+          <div class="expand-arrow" style="margin-left:auto;">▶</div>
+        </div>
+        <div class="expand-body">
+          <div class="creature-block">
+            <div class="stat-row">
+              <div><div class="s-val">1</div><div class="s-name">Strong</div></div>
+              <div><div class="s-val">4</div><div class="s-name">Fast</div></div>
+              <div><div class="s-val">1</div><div class="s-name">Smart</div></div>
+            </div>
+          </div>
+          <p style="font-size:14px;color:#4a3a10;line-height:1.6;margin:8px 0;">Cheerful, bouncy frogs who mean absolutely no harm but keep getting in the way. Easily distracted by shiny objects. Will carry a hero in a giant bubble if given something sparkly.</p>
+          <div class="info-box">
+            <strong>✨ Special: Bubble Breath (2★)</strong> Can create giant ride-able bubbles. Lasts one scene. Kids love riding in bubbles — use this as a reward or shortcut if they're solving things well.
+          </div>
+        </div>
+      </div>
+
+      <!-- Rhyme Bats -->
+      <div class="expand-row" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <div class="expand-emoji">🦇</div>
+          <div>
+            <div class="expand-name">The Rhyme Bats</div>
+            <div style="font-size:12px;color:#7a5a30;font-family:'Courier Prime',monospace;margin-top:2px;">CAVE GUARDIANS · Proud · Rhyme-Obsessed</div>
+          </div>
+          <div class="expand-arrow" style="margin-left:auto;">▶</div>
+        </div>
+        <div class="expand-body">
+          <div class="creature-block">
+            <div class="stat-row">
+              <div><div class="s-val">1</div><div class="s-name">Strong</div></div>
+              <div><div class="s-val">3</div><div class="s-name">Fast</div></div>
+              <div><div class="s-val">3</div><div class="s-name">Smart</div></div>
+            </div>
+          </div>
+          <p style="font-size:14px;color:#4a3a10;line-height:1.6;margin:8px 0;">Incredibly proud of their rhyming ability. They squeak with delight when anyone rhymes back at them. They guard the cave entrance but are won over instantly by a good rhyme.</p>
+          <div class="info-box tip">
+            <strong>🎭 How to Play the Rhyme Bats</strong>
+            Speak in rhyme yourself, even badly — kids find it hilarious. Start the rhyme, pause dramatically, then wait for them to finish it. Accept ANY answer that rhymes even loosely ("cat sat on the… FLAT!" "Perfect! The bats squeak with joy!").
+          </div>
+          <div class="info-box">
+            <strong>✨ Echo Screech (2★)</strong> Can stun an enemy by screaming in unison. Deafens them for one round (they can't attack or use their Special Thing).
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CHALLENGES ===== -->
+    <section id="tab-challenges" class="section">
+      <div class="section-header">
+        <div class="section-icon">🧩</div>
+        <div>
+          <div class="section-title">Challenges</div>
+          <div class="section-sub">Real-world activities calibrated for ages 5 and 7</div>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <strong>📌 Design Philosophy</strong>
+        Each challenge pairs an in-game dice roll with a real physical or mental activity the kids actually do. When they succeed at the real activity, they succeed in the game — no dice needed. Dice can be used as backup or for dramatic tension. The 5-year-old always gets an easier version.
+      </div>
+
+      <div class="grid-2">
+
+        <div class="card chal-card">
+          <div style="font-size:30px;margin-bottom:8px;">🔒</div>
+          <div class="card-title">The Colour Lock</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+            <span class="badge badge-teal">Puzzle</span><span class="badge badge-gold">Ages 4+</span><span class="badge badge-purple">Smart Roll</span>
+          </div>
+          <div class="card-body">A magical door has 3 coloured crystals that must glow in the right order.</div>
+          <div class="info-box" style="margin-top:10px;font-size:13px;">
+            <strong>🎮 How to Run It</strong>
+            Show kids 3 coloured objects (blocks, cups). Show the sequence, then cover them. They recall the order. Age 5: 3 items. Age 7: 4 items, with a distraction in between.
+          </div>
+        </div>
+
+        <div class="card chal-card">
+          <div style="font-size:30px;margin-bottom:8px;">🌉</div>
+          <div class="card-title">The Wobbly Bridge</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+            <span class="badge badge-red">Physical</span><span class="badge badge-gold">Ages 3+</span><span class="badge badge-purple">Fast Roll</span>
+          </div>
+          <div class="card-body">A rope bridge over a rushing river shakes with every step!</div>
+          <div class="info-box" style="margin-top:10px;font-size:13px;">
+            <strong>🎮 How to Run It</strong>
+            5 pillows in a line on the floor. Kids cross without stepping off. Add rule: every 3rd pillow, freeze for 3 seconds. If they fall off, they "splash" and start again — keep it fun, not punishing.
+          </div>
+        </div>
+
+        <div class="card chal-card">
+          <div style="font-size:30px;margin-bottom:8px;">🧌</div>
+          <div class="card-title">The Sleeping Giant's Riddle</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+            <span class="badge badge-teal">Riddle</span><span class="badge badge-gold">Ages 5+</span><span class="badge badge-purple">Smart Roll</span>
+          </div>
+          <div class="card-body">A very sleepy giant won't move unless you answer his question.</div>
+          <div class="info-box" style="margin-top:10px;font-size:13px;">
+            <strong>🎮 Riddles by Age</strong>
+            Age 5: <em>"I have four legs and you sleep in me at night. What am I?"</em> (A bed!)<br>
+            Age 7: <em>"The more you take, the more you leave behind. What am I?"</em> (Footsteps!)
+          </div>
+        </div>
+
+        <div class="card chal-card">
+          <div style="font-size:30px;margin-bottom:8px;">🐰</div>
+          <div class="card-title">The Animal Whisperer</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+            <span class="badge badge-green">Roleplay</span><span class="badge badge-gold">Ages 3+</span><span class="badge badge-teal">No Dice</span>
+          </div>
+          <div class="card-body">A frightened baby animal blocks the path and won't move.</div>
+          <div class="info-box" style="margin-top:10px;font-size:13px;">
+            <strong>🎮 How to Run It</strong>
+            GU acts as a scared bunny, bird, or fox. Kids must speak softly, crouch down, offer pretend food. If they're genuinely gentle in how they act and speak, they succeed — no dice. Reward kindness, not strategy.
+          </div>
+        </div>
+
+        <div class="card chal-card">
+          <div style="font-size:30px;margin-bottom:8px;">⭐</div>
+          <div class="card-title">The Star Map Maze</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+            <span class="badge badge-teal">Drawing</span><span class="badge badge-gold">Ages 4+</span><span class="badge badge-purple">Smart Roll</span>
+          </div>
+          <div class="card-body">A magical map appears but has paths missing — trace the route!</div>
+          <div class="info-box" style="margin-top:10px;font-size:13px;">
+            <strong>🎮 How to Run It</strong>
+            Draw a simple maze on paper beforehand. Age 5: 3 turns, wide paths. Age 7: 5 turns, narrower paths, one dead end. They trace with a finger or pencil. Let them retry — the journey matters, not the time.
+          </div>
+        </div>
+
+        <div class="card chal-card">
+          <div style="font-size:30px;margin-bottom:8px;">👏</div>
+          <div class="card-title">The Echo Cave Clap</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+            <span class="badge badge-teal">Memory</span><span class="badge badge-gold">Ages 4+</span><span class="badge badge-purple">Smart Roll</span>
+          </div>
+          <div class="card-body">The cave echoes back a clapping pattern — repeat it to open the secret door!</div>
+          <div class="info-box" style="margin-top:10px;font-size:13px;">
+            <strong>🎮 How to Run It</strong>
+            Tap a rhythm on the table: clap-clap-pause-clap. Kids repeat it exactly. Age 5: 3 beats. Age 7: 5 beats. Use a spoon on a bowl for a dramatic cave-echo sound! Get it right in 3 tries or the cave giggles and resets.
+          </div>
+        </div>
+
+      </div>
+
+      <div class="divider">⚜ FAILURE IS OKAY ⚜</div>
+      <div class="card" style="--card-accent:var(--purple-light);">
+        <div class="card-label" style="color:var(--purple-light);">💡 When Kids Fail a Challenge</div>
+        <div class="card-body">In FirstFable, failure never stops the story — it makes it more interesting. If kids roll no Stars, something goes wrong that makes the next step slightly harder, but they never get stuck. Examples: they miss the lily pad and get their boots wet (–1 die to the next Fast roll), they fail the riddle and the bats make them sing a silly song first, they fail the silence test and get three more tries. Always frame failure as a funny setback, never a punishment.</div>
+      </div>
+    </section>
+
+    <!-- ===== MINI-GAMES ===== -->
+    <section id="tab-minigames" class="section">
+      <div class="section-header">
+        <div class="section-icon">🎲</div>
+        <div>
+          <div class="section-title">Mini-Games</div>
+          <div class="section-sub">Physical activities — run one every 20–25 minutes to reset energy</div>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <strong>🕐 Timing Guide</strong>
+        Kids ages 5–7 lose focus after about 20 minutes of table talk. Run a mini-game at each of these points: after the Observatory, after the Marsh, and after the Cave. Each takes 5–8 minutes and earns a small in-game reward.
+      </div>
+
+      <!-- Pip's Sneeze -->
+      <div class="card mg-card" style="margin-bottom:18px;">
+        <div style="display:flex;align-items:flex-start;gap:16px;">
+          <div style="font-size:44px;line-height:1;flex-shrink:0;">🐲</div>
+          <div style="flex:1;">
+            <div class="card-title">Pip's Sneeze Training</div>
+            <div style="font-style:italic;font-size:14px;color:#4a3a10;margin-bottom:10px;">Baby dragon Pip needs to learn to aim his sneezes — but he keeps accidentally blowing things away!</div>
+            <div class="info-box" style="margin-bottom:8px;font-size:13px;">
+              <strong>🎮 How to Play</strong>
+              Set up 5 paper cups or pom-poms in a row on the floor. Kids blow through a straw from 1 metre away to knock them over. How many can each hero knock down? Whoever knocks the most "teaches Pip" and earns +1 to Pip's Fire Sneeze Stars for the session.
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <span class="badge badge-purple">Materials: Straws + cups/pom-poms</span>
+              <span class="badge badge-gold">Reward: +1 Pip Star</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Treasure Sort -->
+      <div class="card mg-card" style="margin-bottom:18px;">
+        <div style="display:flex;align-items:flex-start;gap:16px;">
+          <div style="font-size:44px;line-height:1;flex-shrink:0;">💎</div>
+          <div style="flex:1;">
+            <div class="card-title">Pirate Treasure Sort</div>
+            <div style="font-style:italic;font-size:14px;color:#4a3a10;margin-bottom:10px;">A pirate chest spilled everywhere! Sort the treasure to find the hidden magic gem before time runs out.</div>
+            <div class="info-box" style="margin-bottom:8px;font-size:13px;">
+              <strong>🎮 How to Play</strong>
+              Mix 15 small objects of 3 colours. Kids race to sort them into 3 groups. Hidden in the pile: one special "gem" (a button, coin, or painted rock). First to find it while sorting wins a Star. For the 5-year-old: fewer objects (9), only 2 colours.
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <span class="badge badge-purple">Materials: Small coloured objects + 1 special gem</span>
+              <span class="badge badge-gold">Reward: Earns 1 extra Star (any item)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Freeze -->
+      <div class="card mg-card" style="margin-bottom:18px;">
+        <div style="display:flex;align-items:flex-start;gap:16px;">
+          <div style="font-size:44px;line-height:1;flex-shrink:0;">🏰</div>
+          <div style="flex:1;">
+            <div class="card-title">Knight's Freeze Training</div>
+            <div style="font-style:italic;font-size:14px;color:#4a3a10;margin-bottom:10px;">All knights must learn to stop instantly on command. This is freeze training — and it's harder than it looks.</div>
+            <div class="info-box" style="margin-bottom:8px;font-size:13px;">
+              <strong>🎮 How to Play</strong>
+              Play music. When it stops (you control this), everyone freezes like a statue — including you! Last to freeze loses a point. First to reach 5 points becomes Knight Captain for the session and gets the in-game title "Hero of the Freeze." Play for 3–4 rounds.
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <span class="badge badge-purple">Materials: Any music source</span>
+              <span class="badge badge-gold">Reward: Title "Knight Captain" + 1 Star (Roland)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Faerie Dance -->
+      <div class="card mg-card" style="margin-bottom:18px;">
+        <div style="display:flex;align-items:flex-start;gap:16px;">
+          <div style="font-size:44px;line-height:1;flex-shrink:0;">💫</div>
+          <div style="flex:1;">
+            <div class="card-title">The Faerie Ring Dance</div>
+            <div style="font-style:italic;font-size:14px;color:#4a3a10;margin-bottom:10px;">Sela teaches the heroes a special faerie dance that reveals invisible paths through the forest.</div>
+            <div class="info-box" style="margin-bottom:8px;font-size:13px;">
+              <strong>🎮 How to Play</strong>
+              GU calls out movements one at a time, building a sequence: "Spin once! Jump twice! Touch your nose! Clap three times! Turn around! Stomp once!" Kids follow along. If they complete the full 6-step sequence, a "hidden path" is revealed (you point to a new area or skip a challenge). Younger child can do 3 steps.
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <span class="badge badge-purple">Materials: Nothing needed</span>
+              <span class="badge badge-gold">Reward: Shortcut through next location</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Animal Sounds -->
+      <div class="card mg-card" style="margin-bottom:18px;">
+        <div style="display:flex;align-items:flex-start;gap:16px;">
+          <div style="font-size:44px;line-height:1;flex-shrink:0;">🦁</div>
+          <div style="flex:1;">
+            <div class="card-title">Animal Sounds Relay</div>
+            <div style="font-style:italic;font-size:14px;color:#4a3a10;margin-bottom:10px;">Ruby's animals are lost in the forest! Call them home by making their sounds. Get 5 right to rescue them all.</div>
+            <div class="info-box" style="margin-bottom:8px;font-size:13px;">
+              <strong>🎮 How to Play</strong>
+              GU whispers an animal to one child. They make the sound without speaking — other child guesses the animal. Swap. Each correct guess = one animal returns home. Reach 5 to rescue all of Ruby's animals and earn a bonus Star on Blaze. Include fun ones: dolphin, elephant, tiny mouse, very angry cat.
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <span class="badge badge-purple">Materials: Nothing needed</span>
+              <span class="badge badge-gold">Reward: +1 Blaze Star (Ruby)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===== REWARDS ===== -->
+    <section id="tab-rewards" class="section">
+      <div class="section-header">
+        <div class="section-icon">✨</div>
+        <div>
+          <div class="section-title">Rewards & Loot</div>
+          <div class="section-sub">Special Things earned throughout the adventure</div>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <strong>📌 How Special Things Work</strong>
+        Every Special Thing has Stars. When used to help with a Challenge, spend 1 or more Stars — those are gone for the adventure. Some items "recharge" between sessions. Items marked <strong>Keep Forever ✓</strong> carry into future adventures even after Stars are spent.
+      </div>
+
+      <div class="divider">⚜ EARNED IN THIS ADVENTURE ⚜</div>
+
+      <div class="reward-item">
+        <div class="reward-emoji">🏮</div>
+        <div class="reward-info">
+          <div class="reward-name">Starlight Lantern</div>
+          <div style="display:flex;gap:8px;margin:4px 0;flex-wrap:wrap;">
+            <div class="star-display"><span class="star-filled">★</span><span class="star-filled">★</span><span class="star-filled">★</span><span class="star-empty">★</span><span class="star-empty">★</span></div>
+            <span class="badge badge-gold">Keep Forever ✓</span>
+            <span class="badge badge-teal">Observatory</span>
+          </div>
+          <div class="reward-effect">Lights up dark places. Shadow creatures are afraid of it — use a Star to send them fleeing. Also gives +1 die to any Smart Challenge done in complete darkness.</div>
+        </div>
+      </div>
+
+      <div class="reward-item">
+        <div class="reward-emoji">👢</div>
+        <div class="reward-info">
+          <div class="reward-name">Marsh Boots</div>
+          <div style="display:flex;gap:8px;margin:4px 0;flex-wrap:wrap;">
+            <div class="star-display"><span class="star-filled">★</span><span class="star-filled">★</span><span class="star-empty">★</span><span class="star-empty">★</span><span class="star-empty">★</span></div>
+            <span class="badge badge-gold">Keep Forever ✓</span>
+            <span class="badge badge-teal">Bubble Marsh</span>
+          </div>
+          <div class="reward-effect">Walk on squishy, slippery, or sticky surfaces without sinking or falling. Spend a Star to move across impossible terrain (quicksand, lava crust, slick ice) for one scene.</div>
+        </div>
+      </div>
+
+      <div class="reward-item">
+        <div class="reward-emoji">🪨</div>
+        <div class="reward-info">
+          <div class="reward-name">Bat Echo Stone</div>
+          <div style="display:flex;gap:8px;margin:4px 0;flex-wrap:wrap;">
+            <div class="star-display"><span class="star-filled">★</span><span class="star-filled">★</span><span class="star-empty">★</span><span class="star-empty">★</span><span class="star-empty">★</span></div>
+            <span class="badge badge-gold">Keep Forever ✓</span>
+            <span class="badge badge-teal">Candy Crag Caves</span>
+          </div>
+          <div class="reward-effect">Tap gently to sense creatures or objects hidden nearby. Spend a Star to know exactly what's behind a door or inside a box before opening it.</div>
+        </div>
+      </div>
+
+      <div class="reward-item">
+        <div class="reward-emoji">🐲</div>
+        <div class="reward-info">
+          <div class="reward-name">Pip — Baby Dragon Friend</div>
+          <div style="display:flex;gap:8px;margin:4px 0;flex-wrap:wrap;">
+            <div class="star-display"><span class="star-filled">★</span><span class="star-filled">★</span><span class="star-filled">★</span><span class="star-empty">★</span><span class="star-empty">★</span></div>
+            <span class="badge badge-gold">Keep Forever ✓</span>
+            <span class="badge badge-green">Whispering Woods</span>
+          </div>
+          <div class="reward-effect">Pip travels with the party. Can breathe sparks (spend Stars) to light things, startle enemies, or signal for help. Stars refill if Pip rests for a scene. If treated with continued kindness, may grow more powerful in future adventures.</div>
+        </div>
+      </div>
+
+      <div class="reward-item">
+        <div class="reward-emoji">🏅</div>
+        <div class="reward-info">
+          <div class="reward-name">Friend of the Kingdom Medal</div>
+          <div style="display:flex;gap:8px;margin:4px 0;flex-wrap:wrap;">
+            <div class="star-display"><span class="star-filled">★</span><span class="star-empty">★</span><span class="star-empty">★</span><span class="star-empty">★</span><span class="star-empty">★</span></div>
+            <span class="badge badge-gold">Keep Forever ✓</span>
+            <span class="badge badge-teal">Finale Reward</span>
+          </div>
+          <div class="reward-effect">Guards, shopkeepers, and citizens of the Glimmering Kingdom always trust you. Spend the Star to call in a favour from any Kingdom official — they will help, within reason.</div>
+        </div>
+      </div>
+
+      <div class="divider">⚜ BONUS ITEMS ⚜</div>
+
+      <div class="reward-item">
+        <div class="reward-emoji">🫧</div>
+        <div class="reward-info">
+          <div class="reward-name">Jar of Bubble Frog Bubbles</div>
+          <div style="display:flex;gap:8px;margin:4px 0;flex-wrap:wrap;">
+            <div class="star-display"><span class="star-filled">★</span><span class="star-filled">★</span><span class="star-filled">★</span><span class="star-empty">★</span><span class="star-empty">★</span></div>
+            <span class="badge badge-red">One Adventure Only</span>
+          </div>
+          <div class="reward-effect">3 giant ride-able bubbles. Each bubble can carry one character silently through the air for one scene. Bubbles pop when the scene ends or if touched by something sharp.</div>
+        </div>
+      </div>
+
+      <div class="reward-item">
+        <div class="reward-emoji">🪶</div>
+        <div class="reward-info">
+          <div class="reward-name">Rhyme Bat Feather</div>
+          <div style="display:flex;gap:8px;margin:4px 0;flex-wrap:wrap;">
+            <div class="star-display"><span class="star-filled">★</span><span class="star-filled">★</span><span class="star-empty">★</span><span class="star-empty">★</span><span class="star-empty">★</span></div>
+            <span class="badge badge-red">One Adventure Only</span>
+          </div>
+          <div class="reward-effect">Wave it to confuse an enemy — they must make a rhyme before they can act on their next turn. If they can't rhyme (most enemies can't), they waste their turn. Makes even scary things seem silly.</div>
+        </div>
+      </div>
+
+      <div class="info-box tip" style="margin-top:20px;">
+        <strong>💡 Rewarding Unexpected Kindness</strong>
+        When kids do something genuinely kind — apologising to a creature, sharing treasure, helping a frightened NPC without being asked — reward it with a spontaneous bonus Star or a new Shine. Say: "That was so brave and kind — your character just discovered something about themselves. Write down [new Shine] on your sheet!" This teaches that good values in the game reflect real-world character.
+      </div>
+    </section>
+
+    <!-- ===== RULES ===== -->
+    <section id="tab-rules" class="section">
+      <div class="section-header">
+        <div class="section-icon">📖</div>
+        <div>
+          <div class="section-title">Quick Rules Reference</div>
+          <div class="section-sub">FirstFable system — everything at a glance</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-label">Core Mechanic</div>
+          <div class="card-title">How to Roll</div>
+          <div class="card-body">
+            <ol style="padding-left:18px;line-height:2.2;">
+              <li>GU decides which Stat applies</li>
+              <li>Player decides if any Shines or Weaknesses apply</li>
+              <li>Roll = <strong>Stat + Shines − Weakness</strong> dice</li>
+              <li>Every die showing <strong>4, 5, or 6</strong> = one ⭐ Star</li>
+              <li>Count the Stars — more = better result</li>
+            </ol>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-label">Star Outcomes</div>
+          <div class="card-title">What Stars Mean</div>
+          <table class="ref-table" style="margin-top:8px;">
+            <thead><tr><th>Stars</th><th>Result</th></tr></thead>
+            <tbody>
+              <tr><td>0 ⭐</td><td>Failure — something goes wrong, situation gets harder</td></tr>
+              <tr><td>1 ⭐</td><td>Barely success — achieved, but barely, with a complication</td></tr>
+              <tr><td>2 ⭐</td><td>Clean success — it works, no complications</td></tr>
+              <tr><td>3 ⭐</td><td>Full success — works perfectly</td></tr>
+              <tr><td>5+ ⭐</td><td>Amazing — everybody watching is impressed</td></tr>
+              <tr><td>⭐ on ALL dice</td><td><strong>Teaching Moment</strong> — gain a new Shine!</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="divider">⚜ TYPES OF ACTION ⚜</div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-label">Tasks</div>
+          <div class="card-body">Simple actions the character can do pretty easily. <strong>No dice rolled.</strong> No Shine gain possible. Tasks can set up Challenges — if a Task makes a Challenge easier, the player gets +1 die on their Challenge roll. <br><br><em>Example: Sela helps guide the party through briars by taking a Task to find the lightest thorns — everyone else gets +1 die to cross.</em></div>
+        </div>
+        <div class="card">
+          <div class="card-label">Challenges</div>
+          <div class="card-body">Something important with a reasonable chance of going wrong. <strong>Dice are rolled.</strong> Stars are earned. Teaching Moments can happen. <br><br>Challenges can be: Normal (one character vs a difficulty), Contest (two characters competing — most Stars wins), or Fight (see below).</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Fights</div>
+          <div class="card-body">A special Contest. Both sides set their Damage number first (max = all Stats + all Shines = 12). Attacker rolls, defender rolls — attacker's Stars minus defender's Stars = Damage dealt. Reach your Damage limit = Out (unconscious, scared off, gives up).<br><br><strong>No one dies in FirstFable.</strong> "Out" means they're done for the scene.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Teaching Moment</div>
+          <div class="card-body">Roll a Star on <strong>every die</strong> you rolled (not just some). When this happens:<br><br>1. The action succeeds brilliantly<br>2. The player adds +1 to an existing Shine, OR writes a new Shine at 1 point<br><br><strong>This is huge — celebrate it loudly!</strong> It's the game's growth mechanic and kids remember Teaching Moments for a long time.</div>
+        </div>
+      </div>
+
+      <div class="divider">⚜ HURT & DAMAGE ⚜</div>
+
+      <div class="card">
+        <div class="card-label">The Hurt Rule</div>
+        <div class="card-body">A character becomes <strong>Hurt</strong> if they take more Damage Stars than the value of their highest Stat or Shine. Hurt characters take −1 die to all Challenges and gain a temporary Weakness. <br><br>To avoid being Hurt: set your Damage lower (e.g. 3). You'll drop Out sooner, but you won't be Hurt. A new character with all stats at max can take up to 12 Damage before going Out — but risks being badly Hurt.<br><br><strong>For kids' games:</strong> Keep Damage simple. Most fights won't even happen — use kindness, cleverness, and running away instead.</div>
+      </div>
+
+      <div class="divider">⚜ STAT REFERENCE ⚜</div>
+
+      <table class="ref-table">
+        <thead><tr><th>Character Type</th><th>Strong</th><th>Fast</th><th>Smart</th><th>Best For</th></tr></thead>
+        <tbody>
+          <tr><td>Animal Keeper (Ruby)</td><td>3</td><td>2</td><td>4</td><td>Puzzles, animals, clever solutions</td></tr>
+          <tr><td>Faerie Princess (Sela)</td><td>2</td><td>4</td><td>3</td><td>Speed, magic, social situations</td></tr>
+          <tr><td>Knight (Roland)</td><td>4</td><td>3</td><td>2</td><td>Physical challenges, fighting</td></tr>
+          <tr><td>Pirate (Blake)</td><td>3</td><td>3</td><td>3</td><td>All-round, flexible, sneaky</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ===== SESSION TRACKER ===== -->
+    <section id="tab-session" class="section">
+      <div class="section-header">
+        <div class="section-icon">📋</div>
+        <div>
+          <div class="section-title">Session Tracker</div>
+          <div class="section-sub">Live tracking for your game session</div>
+        </div>
+      </div>
+
+      <div class="tracker-grid">
+        <div class="tracker-cell">
+          <div class="tracker-val">
+            <button onclick="adj('stars-total',-1)">−</button>
+            <span id="stars-total">0</span>
+            <button onclick="adj('stars-total',1)">+</button>
+          </div>
+          <div class="tracker-label">Total Stars Rolled</div>
+        </div>
+        <div class="tracker-cell">
+          <div class="tracker-val">
+            <button onclick="adj('teach-moments',-1)">−</button>
+            <span id="teach-moments">0</span>
+            <button onclick="adj('teach-moments',1)">+</button>
+          </div>
+          <div class="tracker-label">Teaching Moments</div>
+        </div>
+        <div class="tracker-cell">
+          <div class="tracker-val">
+            <button onclick="adj('locations-done',-1)">−</button>
+            <span id="locations-done">0</span>
+            <button onclick="adj('locations-done',1)">+</button>
+          </div>
+          <div class="tracker-label">Locations Visited</div>
+        </div>
+        <div class="tracker-cell">
+          <div class="tracker-val">
+            <button onclick="adj('minigames-done',-1)">−</button>
+            <span id="minigames-done">0</span>
+            <button onclick="adj('minigames-done',1)">+</button>
+          </div>
+          <div class="tracker-label">Mini-Games Played</div>
+        </div>
+      </div>
+
+      <div class="divider">⚜ ADVENTURE PROGRESS ⚜</div>
+      <div class="card" style="margin-bottom:18px;">
+        <div class="card-label">Location Checklist</div>
+        <ul class="checklist" id="location-checklist">
+          <li onclick="toggleCheck(this)"><div class="check-box"></div> 🦉 Professor Hoot's Observatory — Paper Sort Challenge</li>
+          <li onclick="toggleCheck(this)"><div class="check-box"></div> 🐸 The Bubble Marsh — Even-Number Lily Pads</li>
+          <li onclick="toggleCheck(this)"><div class="check-box"></div> 🦇 Candy Crag Caves — Rhyme Bat Riddle</li>
+          <li onclick="toggleCheck(this)"><div class="check-box"></div> 🌳 Whispering Woods — Silence Test + Meet Pip</li>
+          <li onclick="toggleCheck(this)"><div class="check-box"></div> 🌟 Rescue the Star — Free Pip from the fallen tree</li>
+          <li onclick="toggleCheck(this)"><div class="check-box"></div> 🏰 Finale — Return to the Kingdom, meet the King</li>
+        </ul>
+        <div class="progress-bar" style="margin-top:12px;">
+          <div class="progress-fill" id="loc-progress" style="width:0%"></div>
+        </div>
+        <div style="font-family:'Courier Prime',monospace;font-size:11px;color:#7a5a20;margin-top:5px;" id="loc-label">0 / 6 locations complete</div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px;">
+        <div class="card-label">Rewards Given</div>
+        <ul class="checklist" id="reward-checklist">
+          <li onclick="toggleCheck(this)"><div class="check-box"></div> 🏮 Starlight Lantern (3★) — given after Observatory</li>
+          <li onclick="toggleCheck(this)"><div class="check-box"></div> 👢 Marsh Boots (2★) — given after Marsh</li>
+          <li onclick="toggleCheck(this)"><div class="check-box"></div> 🪨 Bat Echo Stone (2★) — given after Cave</li>
+          <li onclick="toggleCheck(this)"><div class="check-box"></div> 🐲 Pip joins the party (3★) — given in Whispering Woods</li>
+          <li onclick="toggleCheck(this)"><div class="check-box"></div> 🏅 Friend of the Kingdom Medal (1★) — finale</li>
+        </ul>
+      </div>
+
+      <div class="divider">⚜ PLAYER NOTES ⚜</div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-label" style="margin-bottom:8px;">Player 1 Notes</div>
+          <textarea id="p1-notes" placeholder="Character name, Shines gained, special moments…" style="width:100%;height:100px;background:rgba(139,100,20,.05);border:1px solid var(--parchment3);border-radius:4px;padding:8px;font-family:'Crimson Text',serif;font-size:14px;color:var(--ink);resize:vertical;line-height:1.5;"></textarea>
+        </div>
+        <div class="card">
+          <div class="card-label" style="margin-bottom:8px;">Player 2 Notes</div>
+          <textarea id="p2-notes" placeholder="Character name, Shines gained, special moments…" style="width:100%;height:100px;background:rgba(139,100,20,.05);border:1px solid var(--parchment3);border-radius:4px;padding:8px;font-family:'Crimson Text',serif;font-size:14px;color:var(--ink);resize:vertical;line-height:1.5;"></textarea>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:18px;">
+        <div class="card-label" style="margin-bottom:8px;">Session Notes</div>
+        <textarea id="session-notes" placeholder="What happened? What did the kids love? What would you change next time?" style="width:100%;height:120px;background:rgba(139,100,20,.05);border:1px solid var(--parchment3);border-radius:4px;padding:8px;font-family:'Crimson Text',serif;font-size:14px;color:var(--ink);resize:vertical;line-height:1.5;"></textarea>
+      </div>
+
+      <div class="info-box tip" style="margin-top:18px;">
+        <strong>💡 After the Session</strong>
+        Ask each child: "What was your favourite moment?" and "What do you want your character to do next time?" Write it down here. Kids feel taken seriously when their ideas shape the next adventure — and it gives you a natural hook into Session 2.
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<button class="scroll-top" id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+<div class="github-note">📁 dm-toolkit.html</div>
+
+<script>
+/* ============================================================
+   STARFIELD
+============================================================ */
+(function(){
+  const sf = document.getElementById('starfield');
+  for(let i=0;i<120;i++){
+    const s=document.createElement('div');
+    s.className='star';
+    const sz=Math.random()*2.5+0.5;
+    s.style.cssText=`
+      width:${sz}px;height:${sz}px;
+      left:${Math.random()*100}%;top:${Math.random()*100}%;
+      --d:${(Math.random()*3+2).toFixed(1)}s;
+      --delay:${(Math.random()*5).toFixed(1)}s;
+      --lo:${(Math.random()*0.15).toFixed(2)};
+      --hi:${(Math.random()*0.7+0.2).toFixed(2)};
+    `;
+    sf.appendChild(s);
+  }
+})();
+
+/* ============================================================
+   TAB NAVIGATION
+============================================================ */
+function switchTab(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  document.querySelector(`[data-tab="${id}"]`).classList.add('active');
+  document.getElementById('main').scrollTop=0;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ============================================================
+   EXPAND / COLLAPSE ROWS
+============================================================ */
+function toggleExpand(el){
+  el.classList.toggle('open');
+}
+
+/* ============================================================
+   CHECKLIST TOGGLE
+============================================================ */
+function toggleCheck(li){
+  li.classList.toggle('done');
+  const box=li.querySelector('.check-box');
+  box.textContent=li.classList.contains('done')? '✓':'';
+  // Update location progress if it's the location checklist
+  updateLocationProgress();
+}
+
+function updateLocationProgress(){
+  const cl=document.getElementById('location-checklist');
+  if(!cl)return;
+  const items=cl.querySelectorAll('li');
+  const done=cl.querySelectorAll('li.done').length;
+  const pct=Math.round(done/items.length*100);
+  const bar=document.getElementById('loc-progress');
+  const lbl=document.getElementById('loc-label');
+  if(bar) bar.style.width=pct+'%';
+  if(lbl) lbl.textContent=`${done} / ${items.length} locations complete`;
+}
+
+/* ============================================================
+   DICE ROLLER
+============================================================ */
+let selectedDice=6;
+
+function selectDice(n,btn){
+  selectedDice=n;
+  document.querySelectorAll('.dice-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function rollDice(){
+  const result=Math.floor(Math.random()*selectedDice)+1;
+  const numEl=document.getElementById('dice-num');
+  const lblEl=document.getElementById('dice-label');
+  numEl.textContent=result;
+  numEl.style.animation='none';
+  void numEl.offsetWidth;
+  numEl.style.animation='pop .2s ease-out';
+  const isStarRoll=(selectedDice===6&&result>=4);
+  numEl.style.color=isStarRoll?'#ffd700':'#f0c040';
+  lblEl.textContent=isStarRoll?'⭐ STAR! (4,5,6 = Star on d6)':'d'+selectedDice+' · roll result';
+}
+
+/* ============================================================
+   SESSION TRACKER COUNTERS
+============================================================ */
+function adj(id,delta){
+  const el=document.getElementById(id);
+  let val=parseInt(el.textContent)||0;
+  val=Math.max(0,val+delta);
+  el.textContent=val;
+}
+
+/* ============================================================
+   STARS TRACKER (sidebar)
+============================================================ */
+const specialThings=[
+  {name:"Blaze (Ruby)",stars:5},
+  {name:"Magic Sword (Roland)",stars:5},
+  {name:"Faerie Magic (Sela)",stars:5},
+  {name:"Eye of Sea (Blake)",stars:5},
+  {name:"Starlight Lantern",stars:3},
+  {name:"Marsh Boots",stars:2},
+  {name:"Echo Stone",stars:2},
+  {name:"Pip (Dragon)",stars:3},
+];
+const starState={};
+specialThings.forEach(t=>{ starState[t.name]=t.stars; });
+
+function buildStarsTracker(){
+  const ct=document.getElementById('stars-tracker');
+  ct.innerHTML='';
+  specialThings.forEach(t=>{
+    const row=document.createElement('div');
+    row.className='star-counter-row';
+    const nm=document.createElement('div');
+    nm.className='star-counter-name';
+    nm.textContent=t.name;
+    nm.title=t.name;
+    const pips=document.createElement('div');
+    pips.className='star-pips';
+    for(let i=0;i<t.stars;i++){
+      const pip=document.createElement('div');
+      pip.className='star-pip'+(i<starState[t.name]?' filled':'');
+      pip.onclick=(function(name,idx){
+        return function(){
+          starState[name]=idx+1===starState[name]? idx : idx+1;
+          buildStarsTracker();
+        };
+      })(t.name,i);
+      pips.appendChild(pip);
+    }
+    row.appendChild(nm);
+    row.appendChild(pips);
+    ct.appendChild(row);
+  });
+}
+buildStarsTracker();
+
+/* ============================================================
+   SCROLL TO TOP
+============================================================ */
+window.addEventListener('scroll',function(){
+  const btn=document.getElementById('scroll-top');
+  btn.classList.toggle('visible',window.scrollY>300);
+});
+
+/* ============================================================
+   KEYBOARD SHORTCUTS
+============================================================ */
+document.addEventListener('keydown',function(e){
+  const tabs=['overview','adventure','characters','creatures','challenges','minigames','rewards','rules','session'];
+  if(e.key==='r'&&!e.target.matches('textarea,input')){ rollDice(); }
+});
+</script>
+</body>
+</html>
